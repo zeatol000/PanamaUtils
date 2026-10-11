@@ -73,7 +73,7 @@ Opaque types are where the DSL really shines. There are 4 primary types:
 First, `&=>` is a MethodHandle. It represents downcalls created by the
 DynamicLibrary's function method.
 `*=>` is the opposite of `&=>`. It is a MemorySegment that represents a function
-pointer.
+pointer or an upcall.
 Both `&=>` and `*=>` are easy to use. To run the function, just use the apply
 syntax sugar. They also understand tuples being placed as the argument and will
 unbox them to get the arguments.
