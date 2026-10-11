@@ -1,6 +1,25 @@
 name := "PanamaUtils"
 version := "0.1.0"
-organization := "com.github.zeatol000"
+organization := "io.github.zeatol000"
+organizationName := "github"
+organizationHomepage := Some(uri("https://github.com"))
+
+licenses := List("Apache-2.0" -> uri("https://apache.org"))
+homepage := Some(uri("https://github.com/zeatol000/PanamaUtils"))
+
+scmInfo := Some(ScmInfo(
+  uri("https://github.com"),
+  "scm:git@github.com:zeatol000/PanamaUtils.git"
+))
+
+developers := List(
+  Developer(
+    id    = "zeatol000",
+    name  = "Zea Ward",
+    email = "",
+    url   = uri("https://github.com")
+  )
+)
 
 scalaVersion := "3.9.0"
 scalacOptions ++= Seq(
@@ -27,6 +46,20 @@ javaOptions ++= Seq(
   "--enable-native-access=ALL-UNNAMED"
 )
 fork := true
+
+
+// first time publishing, kinda nervous..
+Test / publishArtifact := false
+pomIncludeRepository := { _ => false }
+publishMavenStyle := true
+publishTo := {
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  if (version.value.endsWith("-SNAPSHOT")) 
+    Some("central-snapshots" at centralSnapshots)
+  else 
+    localStaging.value
+}
+
 
 
 Compile / scalaSource := baseDirectory.value / "main" / "scala"

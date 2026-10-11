@@ -8,7 +8,7 @@ import scala.quoted.*
 import java.lang.foreign.*
 import java.lang.foreign.ValueLayout.*
 
-import zea.panama.dsl.ttvle
+import zea.panama.dsl.ttmle
 import zea.panama.dsl.Arr
 
 package object macros {

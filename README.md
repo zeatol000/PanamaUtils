@@ -6,12 +6,12 @@ A bunch of Project Panama utilities for making lightweight, typesafe Scala code.
 
 For the base DSL library, add this to your build.sbt:
 ```scala
-libraryDependencies += "com.github.zeatol000" %% "panamautils-dsl" % "0.1.0"
+libraryDependencies += "io.github.zeatol000" %% "panamautils-dsl" % "0.1.0"
 ```
 
 And for the experimental macro library, add this:
 ```scala
-libraryDependencies += "com.github.zeatol000" %% "panamautils-macros" % "0.1.0"
+libraryDependencies += "io.github.zeatol000" %% "panamautils-macros" % "0.1.0"
 
 scalacOptions += "-Wconf:msg=.*is out of sync with its TASTy file.*:s"
 ```

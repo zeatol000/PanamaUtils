@@ -40,7 +40,7 @@ object Arr {
       if (off < 0 || off >= constValue[C])
         ArrAioobe(off, constValue[C])
 
-      Ptr.ptrSet[T](arr, off * ttvl[T].byteSize, value)
+      Ptr.ptrSet[T](arr, off * ttml[T].byteSize, value)
     }
     
     inline def reinterpret[U, K <: Int & Singleton]: Arr[U, K] =
