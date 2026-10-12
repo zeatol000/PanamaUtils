@@ -6,6 +6,8 @@ import scala.quoted.*
 import java.lang.foreign.*
 import java.lang.foreign.ValueLayout.*
 
+import zea.panama.dsl.internal.PtrMacroImpl.*
+
 /** Represents a *T.
  * 
  * Pointers represent a raw memory segment. They do not apply offset
@@ -13,80 +15,111 @@ import java.lang.foreign.ValueLayout.*
  * and accessing offset 3, you will be dereferencing a byte index 3. This
  * will cause an illegal argument exception as the underlying MemorySegment
  * is expecting an argument that conforms to the byte offset.
+ *
+ * Capable of slight pointer arithmetic
  */
 opaque type Ptr[T] = MemorySegment
 
 
 object Ptr {
-  val NULL: Ptr[Nothing] = MemorySegment.NULL
+  private val _NULL: Ptr[Nothing] = MemorySegment.NULL
 
+  /** Get a NULL pointer of a given type */
+  def NULL[T]: Ptr[T] = _NULL
+
+  /** Allocate in an arena and return a pointer */
   inline def allocate[T](size: Long)(using a: Arena): Ptr[T] =
     a.allocate(ttvl[T], size)
 
+  /** Allocate in an arena and return a pointer */
   inline def allocate[T](layout: MemoryLayout, size: Long)(using a: Arena): Ptr[T] =
     a.allocate(layout, size)
 
+  /** Allocate in an arena and return a pointer */
   inline def allocate[T](layout: MemoryLayout)(using a: Arena): Ptr[T] =
     a.allocate(layout)
 
 
 
-
+  /** Reinterpret a MemorySegment as a pointer */
   inline def apply[T](ptr: MemorySegment): Ptr[T] =
     ptr
 
+  /** Get a pointer from an address */
   inline def apply[T](addr: Long): Ptr[T] =
     MemorySegment.ofAddress(addr)
 
 
   extension [T](ptr: Ptr[T]) {
+    /** Get the raw MemorySegment */
     inline def raw: MemorySegment = ptr
+
+    /** Get the address of the memory */
     inline def addr: Long = ptr.address
 
+    /** Get the size of the memory */
+    inline def size: Long = ptr.byteSize
+
+
+
+    /** Check if the pointer is null or NULL */
+    inline def isNull: Boolean =
+      ptr == null || ptr.addr == 0
+
+    /** Check if the pointer is null, NULL, or has a length of 0 */
+    inline def isEmpty: Boolean =
+      ptr == null || ptr.addr == 0 || ptr.size == 0
+
+
+
+    /** Dereference */
     inline def unary_! : T = ptrGet[T](ptr, 0)
 
+    /** Dereference with an offset */
     inline def apply(off: Long): T = ptrGet[T](ptr, off)
+
+    /** Dereference (update) at an offset */
     inline def update(off: Long, value: T): Unit = ptrSet[T](ptr, off, value)
 
+    /** Clear the contents of this pointer from memory */
+    inline def clear: Unit = ptr.unload
+
+
+
+    /** Reinterpret the underlying MemorySegment's length */
     inline def reinterpret(size: Long): Ptr[T] =
       ptr.raw.reinterpret(size)
-  }
+
+    /** Reinterpret the type */
+    inline def reinterpret[U]: Ptr[U] =
+      ptr
 
 
-  inline def ptrGet[T](ptr: MemorySegment, offset: Long): T =
-    ${ ptrGetImpl[T]('ptr, 'offset) }
-  
 
-  def ptrGetImpl[T: Type](using q: Quotes)(
-    ptr: Expr[MemorySegment],
-    offset: Expr[Long]
-  ): Expr[T] = {
-    import q.reflect.*
+    /** Pointer arithmetic */
+    inline def + (off: Long): Ptr[T] =
+      MemorySegment.ofAddress(ptr.addr + off)
 
-    TypeRepr.of[T] match {
-      case t if t =:= TypeRepr.of[Byte]     => '{ $ptr.get(JAVA_BYTE,     $offset) }.asInstanceOf[Expr[T]]
-      case t if t =:= TypeRepr.of[Char]     => '{ $ptr.get(JAVA_CHAR,     $offset) }.asInstanceOf[Expr[T]]
-      case t if t =:= TypeRepr.of[Float]    => '{ $ptr.get(JAVA_FLOAT,    $offset) }.asInstanceOf[Expr[T]]
-      case t if t =:= TypeRepr.of[Int]      => '{ $ptr.get(JAVA_INT,      $offset) }.asInstanceOf[Expr[T]]
-      case t if t =:= TypeRepr.of[Long]     => '{ $ptr.get(JAVA_LONG,     $offset) }.asInstanceOf[Expr[T]]
-      case t if t =:= TypeRepr.of[Short]    => '{ $ptr.get(JAVA_SHORT,    $offset) }.asInstanceOf[Expr[T]]
-      case t if t =:= TypeRepr.of[Boolean]  => '{ $ptr.get(JAVA_BOOLEAN,  $offset) }.asInstanceOf[Expr[T]]
-      case _                                => '{ $ptr.get(ADDRESS,       $offset) }.asInstanceOf[Expr[T]]
-    }
-  }
+    /** Pointer arithmetic */
+    inline def - (off: Long): Ptr[T] =
+      MemorySegment.ofAddress(ptr.addr - off)
 
 
-  inline def ptrSet[T](ptr: MemorySegment, offset: Long, value: T): Unit =
-    ptrSetImpl(ttvl[T], ptr, offset, value)
 
-  def ptrSetImpl[T](vl: ValueLayout, ptr: MemorySegment, offset: Long, value: T): Unit = vl match {
-    case vl: OfByte    => ptr.set(vl, offset, value.asInstanceOf[Byte])
-    case vl: OfChar    => ptr.set(vl, offset, value.asInstanceOf[Char])
-    case vl: OfFloat   => ptr.set(vl, offset, value.asInstanceOf[Float])
-    case vl: OfInt     => ptr.set(vl, offset, value.asInstanceOf[Int])
-    case vl: OfLong    => ptr.set(vl, offset, value.asInstanceOf[Long])
-    case vl: OfShort   => ptr.set(vl, offset, value.asInstanceOf[Short])
-    case vl: OfBoolean => ptr.set(vl, offset, value.asInstanceOf[Boolean])
-    case _             => ptr.set(ADDRESS, offset, value.asInstanceOf[MemorySegment])
+      /** Are the contents of the memory resident in physical memory */
+    inline def loaded: Boolean =
+      ptr.isLoaded
+
+    /** Is this pointer a mapped memory segment */
+    inline def mapped: Boolean =
+      ptr.isMapped
+
+    /** Is this pointer in native memory (offheap) */
+    inline def native: Boolean =
+      ptr.isNative
+
+    /** Is this pointer read-only */
+    inline def readOnly: Boolean =
+      ptr.isReadOnly
   }
 }

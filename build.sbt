@@ -1,5 +1,5 @@
 name := "PanamaUtils"
-version := "0.1.0"
+version := "0.1.1"
 organization := "io.github.zeatol000"
 organizationName := "github"
 organizationHomepage := Some(uri("https://github.com"))

@@ -6,6 +6,9 @@ import scala.quoted.*
 
 import java.lang.foreign.*
 
+import zea.panama.dsl.*
+import zea.panama.dsl.internal.*
+
 private object Layout {
   def sym(using q: Quotes)(
     moduleCls: q.reflect.Symbol
@@ -29,7 +32,7 @@ private object Layout {
     import q.reflect.*
 
     val all: List[Expr[MemoryLayout]] = fields.map { f =>
-      val vl   = ttmle(f.tpt.tpe)
+      val vl   = ttvle(f.tpt.tpe)
       val name = Expr(f.name)
       '{
         $vl.withName($name)

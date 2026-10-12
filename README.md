@@ -4,19 +4,17 @@ A bunch of Project Panama utilities for making lightweight, typesafe Scala code.
 
 ## Installation
 
-For the base DSL library, add this to your build.sbt:
-```scala
-libraryDependencies += "io.github.zeatol000" %% "panamautils-dsl" % "0.1.0"
-```
+The library is not currently available for download, unless you want to compile
+it yourself an publish locally.
 
-And for the experimental macro library, add this:
+If you do, and you want to use the macro library, add this to your build.sbt
+file.
 ```scala
-libraryDependencies += "io.github.zeatol000" %% "panamautils-macros" % "0.1.0"
-
 scalacOptions += "-Wconf:msg=.*is out of sync with its TASTy file.*:s"
 ```
 
-The imports are `zea.panama.dsl.*` and `zea.panama.macros.*` respectively.
+The imports are `zea.panama.dsl.*` for the main dsl and `zea.panama.macros.*` for
+the macro library.
 
 The compiler option will be explained below. See [Macro Library](#macro-library)
 
@@ -64,11 +62,12 @@ cannot be bound to the address.
 
 
 
-Opaque types are where the DSL really shines. There are 4 primary types:
+Opaque types are where the DSL really shines. There are 5 primary types:
 - `A &=> R`
 - `A *=> R`
 - `Ptr[T]`
-- `Arr[T, C <: Int & Singleton]`
+- `Arr[T, C <: Long & Singleton]`
+- `T device M <: Boolean & Singleton`
 
 First, `&=>` is a MethodHandle. It represents downcalls created by the
 DynamicLibrary's function method.
@@ -80,13 +79,19 @@ unbox them to get the arguments.
 
 `Ptr[T]` isn't all too special. It represents a MemorySegment and really only
 exists to add a type to the MemorySegment.
-`Arr[T, C <: Int & Singleton]` is an array of a compiletime-determined length.
+`Arr[T, C <: Long & Singleton]` is an array of a compiletime-determined length.
 It auromatically calculates MemoryLayout offsets, while a pointer does not.
+The array is also useful as nested arrays are unfolded into one continuous
+block in memory, instead of a pointer to an array of pointers to arrays.
 
 The DSL uses the type parameters to get the proper ValueLayout and MemoryLayout
 at compiletime, so instead of getting a `Ptr[Int]` of length 2 with
 `Ptr(a.allocate(JAVA_INT, 2))`, you can get it with `Ptr.allocate[Int](2)`.
 The same thing applies to `Arr[Int, 2]`, just the length is supplied via type.
+
+`device` is an interesting one as it does borderline nothing, but it describes
+that a peice of memory resides on the GPU. The Boolean literal tells if it is
+managed, and can be accessed by the CPU or not. E.g., `Ptr[Int] device true`.
 
 
 

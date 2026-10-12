@@ -21,8 +21,8 @@ object Main {
   def run(using a: Arena): Unit = {
     val p = Points(newArr, newArr)
 
-    val x: Arr[Int, 32] = (!p.x.reinterpret(8)).reinterpret(32 * 4)
-    val y: Arr[Int, 32] = (!p.y.reinterpret(8)).reinterpret(32 * 4)
+    val x = p.x.reinterpret[Int, 32l]
+    val y = p.y.reinterpret[Int, 32l]
 
     val sb = new StringBuilder()
     
@@ -42,19 +42,15 @@ object Main {
   }
 
 
-  def newArr(using a: Arena): Ptr[Arr[Int, 32]] = {
-    val ptr: Ptr[Arr[Int, 32]] =
-      Ptr.allocate(1)
-
-    val ms: Arr[Int, 32] =
+  def newArr(using a: Arena): Arr[Int, 32l] = {
+    val ms: Arr[Int, 32l] =
       Arr.allocate
 
     for (i <- 0 until 32) {
       ms(i) = i
     }
 
-    ptr(0) = ms
-    ptr
+    ms
   }
 }
 

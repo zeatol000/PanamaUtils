@@ -1,3 +1,5 @@
+package zea.panama.test
+
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.lang.foreign.*
